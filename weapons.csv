@@ -1,0 +1,10 @@
+id,name,stock,ammo,price,type,created
+101,ak-47,5,30,220.9,assault rifle,27/03/1947
+102,berretta m9,10,15,120.99,pistol,15/08/1992
+103,m14,2,20,551.23,assault rifle,29/05/1954
+104,Mossberg 500,95,6,182.52,shotgun,13/12/1961
+105,uzi,6,32,162.05,submachine gun,21/11/1954
+106,fnp-90,25,50,676.52,submachine gun,03/04/86
+107,Colt 45,13,7,175.15,pistol,22/02/1911
+108,Rpg-7,42,1,1000,rocket launcher,10/10/58
+109,m-16,79,30,430.85,assault rifle,21/04/1959
