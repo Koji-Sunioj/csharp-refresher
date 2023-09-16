@@ -2,7 +2,7 @@ namespace cart;
 
 class Cart{
     public List<CartItem> items = new List<CartItem>(); 
-    public double balance;
+    public double balance = 0;
 }
 
 class CartItem
