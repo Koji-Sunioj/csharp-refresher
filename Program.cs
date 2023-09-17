@@ -48,7 +48,6 @@ class Program
             return format;
         }
 
-        
 
         void ShowWeapons(string orderBy,string direction){
             arsenal.sortWeapons(orderBy,direction);
@@ -60,74 +59,74 @@ class Program
             }
         }
 
- 
-        
-            
         string addToCart(string parameter)
         {   
             string cartResponse = "";
-            int possibleWeaponId = int.Parse(parameter);
-            int possibleWeaponIndex = arsenal.weapons.FindIndex(weapon => weapon.id == possibleWeaponId);
-            Weapon selectedWeopon = arsenal.weapons.Find(weapon => weapon.id == possibleWeaponId);
-            if (possibleWeaponIndex > -1 && selectedWeopon.stock > 0)
+            int weaponId = int.Parse(parameter);
+            int weaponIndex = arsenal.weapons.FindIndex(weapon => weapon.id == weaponId);
+            Weapon selectedWeopon = arsenal.weapons.Find(weapon => weapon.id == weaponId);
+            if (weaponIndex > -1 && selectedWeopon.stock > 0)
             {
-                int existsInCart = cart.items.FindIndex(item => item.id == possibleWeaponId);
-                if (existsInCart > -1)
-                {
-                    cart.items[existsInCart].amount ++;
-                    cart.balance += cart.items[existsInCart].price;
+                int cartIndex = cart.items.FindIndex(item => item.id == weaponId);
+                string addCommand = $"{(cartIndex > -1 ? "increment cart":"fresh add")}";
+                switch(addCommand){
+                    case "increment cart":
+                        cart.items[cartIndex].amount ++;
+                        break;
+                    case "fresh add":
+                        cart.items.Add(new CartItem(){id=selectedWeopon.id,name=selectedWeopon.name,price=selectedWeopon.price,amount=1});
+                        break;
+
                 }
-                else {
-                    
-                    cart.items.Add(new CartItem(){id=selectedWeopon.id,name=selectedWeopon.name,price=selectedWeopon.price,amount=1});
-                    cart.balance += selectedWeopon.price;
-                }
-                cartResponse = String.Format(existsInCart > -1 ? "Weapon {0} amount updated in your cart": "Successfully added {0} to your cart",selectedWeopon.name);
                 selectedWeopon.stock --;
+                cart.balance += selectedWeopon.price;
+                cartResponse = cartIndex > -1 ? 
+                    $"Weapon {textinfo.ToTitleCase(selectedWeopon.name)} amount updated in your cart": 
+                    $"Successfully added {textinfo.ToTitleCase(selectedWeopon.name)} to your cart";
             }
             else
             {
                 cartResponse = "Invalid weapon id number";
             }
-
             return cartResponse;
         }
 
         string removeFromCart(string parameter)
         {
             string cartResponse = "";
-            int possibleCartId = int.Parse(parameter);
-            int possibleCartIndex = cart.items.FindIndex(item => item.id == possibleCartId);
-            CartItem cartItem = cart.items.Find(item => item.id == possibleCartId);
-            if (possibleCartIndex > -1)
-            {
-                cartResponse = String.Format(cartItem.amount == 1?"Weapon {0} removed from your cart":"Weapon {0} cart amount updated",cartItem.name);
-                arsenal.weapons.Find(weapon => weapon.id == possibleCartId).stock ++; 
-               
-                if (cart.items.Count() == 1 && cartItem.amount == 1)
-                {
-                    cart.items.Clear();
-                    cart.balance = 0;
-                }
-                else if (cart.items.Count() != 1 && cartItem.amount == 1){
-                    cart.balance -= cartItem.price;
-                    cart.items.RemoveAt(possibleCartIndex);
-                }
+            int cartId = int.Parse(parameter);
+            CartItem cartItem = cart.items.Find(item => item.id == cartId);
+            bool existsInCart = cartItem != null;
 
-                else 
+            if (existsInCart){
+                arsenal.weapons.Find(weapon => weapon.id == cartId).stock ++;
+                string removeCommand = $"{(cartItem.amount == 1?"remove":"keep")} {(cart.items.Count() == 1? "items":"item")}";
+                switch(removeCommand)
                 {
-                    cartItem.amount --;
-                    cart.balance -= cartItem.price;
-                } 
-            
+                    case "remove items":
+                        cart.items.Clear();
+                        cart.balance = 0;
+                        break;
+                    case "remove item":
+                        int cartIndex = cart.items.FindIndex(item => item.id == cartId);
+                        cart.items.RemoveAt(cartIndex);
+                        cart.balance -= cartItem.price;
+                        break;
+                    case "keep item":
+                    case "keep items":
+                        cartItem.amount --;
+                        cart.balance -= cartItem.price;
+                        break;
+                }
+                cartResponse = removeCommand.Split(" ")[0] == "remove" ? 
+                    $"{textinfo.ToTitleCase(cartItem.name)} remove from your cart" : 
+                    $"{textinfo.ToTitleCase(cartItem.name)} amount updated from your cart";
             }
 
-            else
+            else 
             {
-                cartResponse = "Invalid weapon id number";
+                cartResponse = "That weapon id doesn't exist in your cart";
             }
-            
-
             return cartResponse;
         }
 
@@ -135,10 +134,12 @@ class Program
             bool hasCartItems = items.Count > 0;
             if (hasCartItems)
             {
+                string itemHeader = context == "cart" ? "Your cart items\n" : "Your order items\n";
+                WriteLine(itemHeader);
                 string format = showTable(new string[] {"id", "name", "price", "amount"});
                 foreach(CartItem item in items)
                 {
-                    WriteLine(format,item.id,item.name,item.price,item.amount);
+                    WriteLine(format,item.id,textinfo.ToTitleCase(item.name),item.price,item.amount);
                 }
                 string outPut = context == "cart" ? String.Format("\nYour balance is: \u20AC{0}", Math.Round(balance,2)) : String.Format("\nOrder total: \u20AC{0}", Math.Round(balance,2));
                 WriteLine(outPut);
@@ -146,9 +147,7 @@ class Program
         }
 
         string checkOut(){
-
             string feedback = "";
-
             if (cart.items.Count() > 0)
             {
                 Guid uuid = Guid.NewGuid();
@@ -167,11 +166,9 @@ class Program
 
         void showOrders(){
             bool hasOrders = orders.Count() > 0;
-            WriteLine("Your orders:\n");
             if (hasOrders){
-               
                 foreach(Order order in orders){
-                    WriteLine($"Order id:{order.orderId}\nCreated at:{order.checkOutDate}\nItems:\n");
+                    WriteLine($"Order id:{order.orderId}\nCreated at:{order.checkOutDate}\n");
                     ShowCartItems(order.items,"orders",order.total); 
                 }
 
@@ -220,9 +217,6 @@ class Program
                                 direction = shopResponse[2];
                             }
                             break;
-                        case "checkout":
-                           
-                            break;
                         default:
                             feedback = "\nIncorrect input...\n\n";
                             break;
@@ -234,9 +228,10 @@ class Program
                      feedback = $"\n{checkOut()}\n\n";
                 }
             }
-            catch (Exception)
+            catch (Exception e)
             {
-               feedback = "\nIncorrect input..\n\n";
+                WriteLine(e);
+                feedback = "\nIncorrect input..\n\n";
                 
             }
 
