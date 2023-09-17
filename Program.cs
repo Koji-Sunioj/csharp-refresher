@@ -4,8 +4,11 @@ using cart;
 using weapon;
 using orders;
 
+
 using System;
+using System.IO;
 using System.Text;
+using System.Reflection;
 using System.Globalization;
 using System.Collections.Generic;
 using static System.Console;
@@ -18,7 +21,8 @@ class Program
         Arsenal arsenal = new Arsenal();
         List<Order> orders =  new List<Order>();
         TextInfo textinfo = new CultureInfo("en-GB", false).TextInfo;
-       
+        arsenal.initCsv();
+
         string showTable(string[] columns){
             
             var menuItemLengths = new Dictionary<string, int>(){
@@ -50,6 +54,7 @@ class Program
 
 
         void ShowWeapons(string orderBy,string direction){
+            WriteLine("asdasd");
             arsenal.sortWeapons(orderBy,direction);
             string format = showTable(new string[] {"id", "name", "stock", "ammo","price","type","created"});
             foreach (Weapon weapon in arsenal.weapons)
@@ -234,8 +239,6 @@ class Program
                 feedback = "\nIncorrect input..\n\n";
                 
             }
-
-            
         } 
     }
 }
